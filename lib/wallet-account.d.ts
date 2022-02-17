@@ -65,6 +65,12 @@ export declare class WalletConnection {
      */
     static createWithLocalStorage(near: Near, appKeyPrefix: string | null): WalletConnection;
     /**
+     * Creates a WalletConnection with chrome storage as its backing store.
+     * @param near A near instance.
+     * @param appKeyPrefix A key prefix for store in chrome local storage.
+     */
+    static createWithChromeStorage(near: Near, appKeyPrefix: string | null): Promise<WalletConnection>;
+    /**
      * Returns true, if this WalletAccount is authorized with the wallet.
      * @example
      * ```js
@@ -113,7 +119,7 @@ export declare class WalletConnection {
      * @hidden
      * Complete sign in for a given account id and public key. To be invoked by the app when getting a callback from the wallet.
      */
-    _completeSignInWithAccessKey(): Promise<void>;
+    _completeSignInWithAccessKey(storageType: 'localStorage' | 'chromeStorage'): Promise<void>;
     /**
      * @hidden
      * @param accountId The NEAR account owning the given public key

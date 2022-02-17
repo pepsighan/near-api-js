@@ -104,7 +104,37 @@ export class WalletConnection {
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
         wc._authData = authData || { allKeys: [] };
         if (!wc.isSignedIn()) {
-            wc._completeSignInWithAccessKey();
+            wc._completeSignInWithAccessKey('localStorage');
+        }
+
+        return wc;
+    }
+
+    /**
+     * Creates a WalletConnection with chrome storage as its backing store.
+     * @param near A near instance.
+     * @param appKeyPrefix A key prefix for store in chrome local storage.
+     */
+    static async createWithChromeStorage(
+        near: Near,
+        appKeyPrefix: string | null
+    ): Promise<WalletConnection> {
+        if (!chrome?.storage?.local) {
+            throw new Error('Call only possible from extension context');
+        }
+
+        const wc = new WalletConnection();
+
+        wc._near = near;
+        const authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
+        const storeObj = await chrome.storage.local.get(authDataKey);
+        const authData = JSON.parse(storeObj[authDataKey]);
+        wc._networkId = near.config.networkId;
+        wc._walletBaseUrl = near.config.walletUrl;
+        wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
+        wc._authData = authData || { allKeys: [] };
+        if (!wc.isSignedIn()) {
+            await wc._completeSignInWithAccessKey('chromeStorage');
         }
 
         return wc;
@@ -269,7 +299,9 @@ export class WalletConnection {
      * @hidden
      * Complete sign in for a given account id and public key. To be invoked by the app when getting a callback from the wallet.
      */
-    async _completeSignInWithAccessKey() {
+    async _completeSignInWithAccessKey(
+        storageType: 'localStorage' | 'chromeStorage'
+    ): Promise<void> {
         const currentUrl = new URL(window.location.href);
         const publicKey = currentUrl.searchParams.get('public_key') || '';
         const allKeys = (currentUrl.searchParams.get('all_keys') || '').split(
@@ -282,10 +314,18 @@ export class WalletConnection {
                 accountId,
                 allKeys,
             };
-            window.localStorage.setItem(
-                this._authDataKey,
-                JSON.stringify(this._authData)
-            );
+
+            if (storageType === 'localStorage') {
+                window.localStorage.setItem(
+                    this._authDataKey,
+                    JSON.stringify(this._authData)
+                );
+            } else {
+                await chrome.storage.local.set({
+                    [this._authDataKey]: JSON.stringify(this._authData),
+                });
+            }
+
             if (publicKey) {
                 await this._moveKeyFromTempToPermanent(accountId, publicKey);
             }
