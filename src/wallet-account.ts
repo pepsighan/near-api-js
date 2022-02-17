@@ -64,6 +64,9 @@ export class WalletConnection {
     _authDataKey: string;
 
     /** @hidden */
+    _authDataStoreType: 'localStorage' | 'chromeStorage';
+
+    /** @hidden */
     _keyStore: KeyStore;
 
     /** @hidden */
@@ -98,13 +101,16 @@ export class WalletConnection {
 
         wc._near = near;
         wc._authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
-        const authData = JSON.parse(window.localStorage.getItem(wc._authDataKey));
+        wc._authDataStoreType = 'localStorage';
+        const authData = JSON.parse(
+            window.localStorage.getItem(wc._authDataKey)
+        );
         wc._networkId = near.config.networkId;
         wc._walletBaseUrl = near.config.walletUrl;
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
         wc._authData = authData || { allKeys: [] };
         if (!wc.isSignedIn()) {
-            wc._completeSignInWithAccessKey('localStorage');
+            wc._completeSignInWithAccessKey();
         }
 
         return wc;
@@ -127,6 +133,7 @@ export class WalletConnection {
 
         wc._near = near;
         wc._authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
+        wc._authDataStoreType = 'chromeStorage';
         const storeObj = await chrome.storage.local.get(wc._authDataKey);
         const authData = JSON.parse(storeObj[wc._authDataKey]);
         wc._networkId = near.config.networkId;
@@ -134,7 +141,7 @@ export class WalletConnection {
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
         wc._authData = authData || { allKeys: [] };
         if (!wc.isSignedIn()) {
-            await wc._completeSignInWithAccessKey('chromeStorage');
+            await wc._completeSignInWithAccessKey();
         }
 
         return wc;
@@ -299,9 +306,7 @@ export class WalletConnection {
      * @hidden
      * Complete sign in for a given account id and public key. To be invoked by the app when getting a callback from the wallet.
      */
-    async _completeSignInWithAccessKey(
-        storageType: 'localStorage' | 'chromeStorage'
-    ): Promise<void> {
+    async _completeSignInWithAccessKey(): Promise<void> {
         const currentUrl = new URL(window.location.href);
         const publicKey = currentUrl.searchParams.get('public_key') || '';
         const allKeys = (currentUrl.searchParams.get('all_keys') || '').split(
@@ -315,7 +320,7 @@ export class WalletConnection {
                 allKeys,
             };
 
-            if (storageType === 'localStorage') {
+            if (this._authDataStoreType === 'localStorage') {
                 window.localStorage.setItem(
                     this._authDataKey,
                     JSON.stringify(this._authData)
@@ -361,9 +366,13 @@ export class WalletConnection {
      * @example
      * walletAccount.signOut();
      */
-    signOut() {
+    async signOut(): Promise<void> {
         this._authData = {};
-        window.localStorage.removeItem(this._authDataKey);
+        if (this._authDataStoreType === 'localStorage') {
+            window.localStorage.removeItem(this._authDataKey);
+        } else {
+            await chrome.storage.local.remove(this._authDataKey);
+        }
     }
 
     /**

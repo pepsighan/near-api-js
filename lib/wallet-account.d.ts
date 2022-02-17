@@ -43,6 +43,8 @@ export declare class WalletConnection {
     /** @hidden */
     _authDataKey: string;
     /** @hidden */
+    _authDataStoreType: 'localStorage' | 'chromeStorage';
+    /** @hidden */
     _keyStore: KeyStore;
     /** @hidden */
     _authData: any;
@@ -119,7 +121,7 @@ export declare class WalletConnection {
      * @hidden
      * Complete sign in for a given account id and public key. To be invoked by the app when getting a callback from the wallet.
      */
-    _completeSignInWithAccessKey(storageType: 'localStorage' | 'chromeStorage'): Promise<void>;
+    _completeSignInWithAccessKey(): Promise<void>;
     /**
      * @hidden
      * @param accountId The NEAR account owning the given public key
@@ -131,7 +133,7 @@ export declare class WalletConnection {
      * @example
      * walletAccount.signOut();
      */
-    signOut(): void;
+    signOut(): Promise<void>;
     /**
      * Returns the current connected wallet account
      */
