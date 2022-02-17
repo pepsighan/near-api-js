@@ -97,8 +97,8 @@ export class WalletConnection {
         const wc = new WalletConnection();
 
         wc._near = near;
-        const authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
-        const authData = JSON.parse(window.localStorage.getItem(authDataKey));
+        wc._authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
+        const authData = JSON.parse(window.localStorage.getItem(wc._authDataKey));
         wc._networkId = near.config.networkId;
         wc._walletBaseUrl = near.config.walletUrl;
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
@@ -126,9 +126,9 @@ export class WalletConnection {
         const wc = new WalletConnection();
 
         wc._near = near;
-        const authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
-        const storeObj = await chrome.storage.local.get(authDataKey);
-        const authData = JSON.parse(storeObj[authDataKey]);
+        wc._authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
+        const storeObj = await chrome.storage.local.get(wc._authDataKey);
+        const authData = JSON.parse(storeObj[wc._authDataKey]);
         wc._networkId = near.config.networkId;
         wc._walletBaseUrl = near.config.walletUrl;
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
