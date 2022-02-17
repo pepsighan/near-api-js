@@ -135,7 +135,7 @@ export class WalletConnection {
         wc._authDataKey = appKeyPrefix + LOCAL_STORAGE_KEY_SUFFIX;
         wc._authDataStoreType = 'chromeStorage';
         const storeObj = await chrome.storage.local.get(wc._authDataKey);
-        const authData = JSON.parse(storeObj[wc._authDataKey]);
+        const authData = JSON.parse(storeObj[wc._authDataKey] || null);
         wc._networkId = near.config.networkId;
         wc._walletBaseUrl = near.config.walletUrl;
         wc._keyStore = (near.connection.signer as InMemorySigner).keyStore;
