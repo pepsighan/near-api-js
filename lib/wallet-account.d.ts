@@ -2,7 +2,7 @@ import { Account } from './account';
 import { Near } from './near';
 import { KeyStore } from './key_stores';
 import { FinalExecutionOutcome } from './providers';
-import { Transaction, Action } from './transaction';
+import { Action, Transaction } from './transaction';
 import { PublicKey } from './utils';
 import { Connection } from './connection';
 interface SignInOptions {
@@ -52,7 +52,18 @@ export declare class WalletConnection {
     _near: Near;
     /** @hidden */
     _connectedAccount: ConnectedWalletAccount;
-    constructor(near: Near, appKeyPrefix: string | null);
+    /**
+     * Do not allow creating a WalletAccount directly. Use static functions
+     * instead.
+     * @private
+     */
+    private constructor();
+    /**
+     * Creates a WalletConnection with local storage as its backing store.
+     * @param near A near instance.
+     * @param appKeyPrefix A key prefix for store in local storage.
+     */
+    static createWithLocalStorage(near: Near, appKeyPrefix: string | null): WalletConnection;
     /**
      * Returns true, if this WalletAccount is authorized with the wallet.
      * @example
